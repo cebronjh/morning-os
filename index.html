@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Morning Operating System — 90-Day Playbook</title>
+<style>
+  :root {
+    --ink: #1a1a1a;
+    --ink-mid: #3d3d3d;
+    --ink-muted: #6b6b6b;
+    --ink-faint: #9a9a9a;
+    --surface: #ffffff;
+    --surface-raised: #f8f7f4;
+    --surface-accent: #f2f0eb;
+    --rule: #e2e0d8;
+    --rule-strong: #c8c5bc;
+    --gold: #b8902a;
+    --gold-light: #f5edda;
+    --gold-mid: #d4a843;
+    --red: #b83232;
+    --red-light: #fceaea;
+    --teal: #1a6b5a;
+    --teal-light: #e2f0ed;
+    --blue-dark: #1a3a5c;
+    --blue-light: #e8f0f8;
+    --font-display: 'Georgia', 'Times New Roman', serif;
+    --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono: 'Courier New', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-body); background: var(--surface-raised); color: var(--ink); font-size: 15px; line-height: 1.7; }
+
+  /* NAV */
+  nav { position: sticky; top: 0; z-index: 100; background: var(--ink); border-bottom: 2px solid var(--gold); padding: 0 2rem; display: flex; align-items: center; gap: 0; overflow-x: auto; scrollbar-width: none; }
+  nav::-webkit-scrollbar { display: none; }
+  .nav-brand { font-family: var(--font-display); font-size: 13px; color: var(--gold-mid); white-space: nowrap; padding: 14px 1.5rem 14px 0; border-right: 1px solid #333; margin-right: 0.5rem; letter-spacing: 0.05em; }
+  nav a { color: #aaa; text-decoration: none; font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; padding: 14px 14px; white-space: nowrap; transition: color 0.15s; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+  nav a:hover { color: #fff; }
+  nav a.active { color: var(--gold-mid); border-bottom-color: var(--gold-mid); }
+
+  /* LAYOUT */
+  .page { max-width: 860px; margin: 0 auto; padding: 3rem 2rem 5rem; }
+
+  /* HERO */
+  .hero { border-bottom: 2px solid var(--ink); padding-bottom: 2.5rem; margin-bottom: 3rem; }
+  .hero-eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--gold); margin-bottom: 0.75rem; }
+  .hero h1 { font-family: var(--font-display); font-size: clamp(32px, 5vw, 52px); font-weight: 700; line-height: 1.15; color: var(--ink); margin-bottom: 1rem; }
+  .hero h1 em { font-style: italic; color: var(--gold); }
+  .hero-sub { font-size: 16px; color: var(--ink-mid); max-width: 560px; line-height: 1.6; margin-bottom: 1.5rem; }
+  .hero-meta { display: flex; gap: 2rem; flex-wrap: wrap; }
+  .hero-stat .num { font-family: var(--font-display); font-size: 28px; font-weight: 700; color: var(--ink); display: block; }
+  .hero-stat .lbl { font-size: 12px; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+
+  /* SECTIONS */
+  .section { margin-bottom: 4rem; scroll-margin-top: 60px; }
+  .section-header { display: flex; align-items: baseline; gap: 1rem; border-bottom: 1px solid var(--rule-strong); padding-bottom: 0.75rem; margin-bottom: 1.75rem; }
+  .section-num { font-family: var(--font-display); font-size: 13px; color: var(--gold); letter-spacing: 0.08em; text-transform: uppercase; flex-shrink: 0; }
+  .section-header h2 { font-family: var(--font-display); font-size: 24px; font-weight: 700; color: var(--ink); line-height: 1.2; }
+
+  /* CALLOUTS */
+  .callout { border-left: 3px solid var(--gold); background: var(--gold-light); padding: 1rem 1.25rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; }
+  .callout.red { border-color: var(--red); background: var(--red-light); }
+  .callout.teal { border-color: var(--teal); background: var(--teal-light); }
+  .callout.dark { border-color: var(--ink); background: var(--surface-accent); }
+  .callout-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; font-weight: 600; margin-bottom: 4px; color: var(--gold); }
+  .callout.red .callout-label { color: var(--red); }
+  .callout.teal .callout-label { color: var(--teal); }
+  .callout.dark .callout-label { color: var(--ink-muted); }
+  .callout p { font-size: 14px; line-height: 1.6; color: var(--ink-mid); }
+  .callout p + p { margin-top: 8px; }
+  .callout strong { color: var(--ink); }
+
+  /* NON-NEGOTIABLES */
+  .nonneg-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin: 1.5rem 0; }
+  .nonneg-card { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 1rem 1.1rem; position: relative; }
+  .nonneg-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--gold); border-radius: 8px 0 0 8px; }
+  .nonneg-card h4 { font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+  .nonneg-card p { font-size: 13px; color: var(--ink-muted); line-height: 1.5; }
+
+  /* TIMELINE */
+  .timeline { margin: 1.5rem 0; }
+  .timeline-item { display: grid; grid-template-columns: 80px 24px 1fr; gap: 0 12px; margin-bottom: 0; }
+  .timeline-item:last-child .tl-line { display: none; }
+  .tl-time { font-family: var(--font-mono); font-size: 12px; color: var(--gold); padding-top: 3px; text-align: right; font-weight: 600; }
+  .tl-dot-col { display: flex; flex-direction: column; align-items: center; }
+  .tl-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--gold); flex-shrink: 0; margin-top: 6px; }
+  .tl-line { width: 1px; flex: 1; background: var(--rule-strong); min-height: 24px; margin: 2px 0; }
+  .tl-content { padding-bottom: 1.25rem; }
+  .tl-title { font-size: 15px; font-weight: 600; color: var(--ink); line-height: 1.3; }
+  .tl-desc { font-size: 13px; color: var(--ink-muted); margin-top: 3px; line-height: 1.5; }
+  .tl-badge { display: inline-block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; padding: 2px 8px; border-radius: 99px; margin-top: 4px; font-weight: 600; }
+  .badge-gold { background: var(--gold-light); color: var(--gold); }
+  .badge-teal { background: var(--teal-light); color: var(--teal); }
+  .badge-blue { background: var(--blue-light); color: var(--blue-dark); }
+  .badge-red { background: var(--red-light); color: var(--red); }
+
+  /* 10X TABLE */
+  .tenx-table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 14px; }
+  .tenx-table th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-muted); padding: 8px 12px; border-bottom: 2px solid var(--rule-strong); background: var(--surface-accent); }
+  .tenx-table td { padding: 10px 12px; border-bottom: 1px solid var(--rule); vertical-align: top; color: var(--ink-mid); }
+  .tenx-table tr:last-child td { border-bottom: none; }
+  .tenx-table td:first-child { font-weight: 600; color: var(--ink); width: 180px; }
+  .tenx-table .num-badge { display: inline-block; width: 22px; height: 22px; border-radius: 50%; background: var(--gold); color: white; font-size: 11px; font-weight: 700; text-align: center; line-height: 22px; margin-right: 8px; }
+
+  /* PROTOCOL RULES */
+  .rule-list { margin: 1.5rem 0; }
+  .rule-item { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 1rem 1.25rem 1rem 3.5rem; margin-bottom: 10px; position: relative; }
+  .rule-item::before { content: attr(data-num); position: absolute; left: 1.1rem; top: 50%; transform: translateY(-50%); font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--rule-strong); line-height: 1; }
+  .rule-item h4 { font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+  .rule-item p { font-size: 13px; color: var(--ink-muted); line-height: 1.55; }
+  .rule-item .reframe { font-family: var(--font-mono); font-size: 13px; background: var(--surface-accent); border-radius: 4px; padding: 6px 10px; margin-top: 8px; color: var(--ink-mid); border-left: 3px solid var(--gold); }
+
+  /* IDENTITY */
+  .identity-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 1.5rem 0; }
+  .identity-card { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 1.1rem 1.25rem; }
+  .identity-card .old { font-size: 12px; color: var(--red); text-decoration: line-through; margin-bottom: 6px; }
+  .identity-card .new { font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+  .identity-card .affirmation { font-size: 13px; font-style: italic; color: var(--ink-muted); line-height: 1.55; border-top: 1px solid var(--rule); padding-top: 8px; margin-top: 8px; }
+
+  /* SCORECARD */
+  .scorecard { background: var(--surface); border: 2px solid var(--ink); border-radius: 8px; overflow: hidden; margin: 1.5rem 0; }
+  .scorecard-header { background: var(--ink); color: white; padding: 12px 1.25rem; display: flex; align-items: center; justify-content: space-between; }
+  .scorecard-header span { font-family: var(--font-display); font-size: 14px; font-weight: 700; }
+  .scorecard-header .pts { font-size: 12px; color: var(--gold-mid); font-family: var(--font-mono); }
+  .scorecard-row { display: flex; align-items: center; padding: 10px 1.25rem; border-bottom: 1px solid var(--rule); gap: 12px; }
+  .scorecard-row:last-child { border-bottom: none; }
+  .sc-check { width: 20px; height: 20px; border-radius: 4px; border: 1.5px solid var(--rule-strong); flex-shrink: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; user-select: none; }
+  .sc-check.checked { background: var(--teal); border-color: var(--teal); }
+  .sc-check.checked::after { content: '✓'; color: white; font-size: 12px; font-weight: 700; }
+  .sc-label { flex: 1; font-size: 14px; color: var(--ink-mid); }
+  .sc-pts { font-family: var(--font-mono); font-size: 12px; color: var(--ink-faint); }
+  .scorecard-row.checked-row .sc-label { color: var(--ink-faint); text-decoration: line-through; }
+
+  /* DATE RESET BANNER */
+  .date-banner { display: flex; align-items: center; justify-content: space-between; background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 10px 14px; margin-bottom: 1rem; }
+  .date-banner .date-str { font-size: 13px; font-weight: 600; color: var(--ink); }
+  .date-banner .streak-info { font-size: 12px; color: var(--ink-muted); }
+  .reset-day-btn { font-size: 12px; color: var(--ink-muted); background: none; border: 1px solid var(--rule-strong); border-radius: 6px; padding: 4px 12px; cursor: pointer; }
+  .reset-day-btn:hover { background: var(--surface-accent); }
+
+  /* WEEKLY HISTORY */
+  .week-history { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin: 1rem 0; }
+  .day-dot { border-radius: 6px; padding: 6px 4px; text-align: center; border: 1px solid var(--rule); background: var(--surface); }
+  .day-dot .dd-label { font-size: 10px; color: var(--ink-faint); text-transform: uppercase; }
+  .day-dot .dd-score { font-size: 13px; font-weight: 600; color: var(--ink-muted); margin-top: 2px; }
+  .day-dot.elite { background: var(--teal-light); border-color: var(--teal); }
+  .day-dot.elite .dd-score { color: var(--teal); }
+  .day-dot.standard { background: var(--gold-light); border-color: var(--gold); }
+  .day-dot.standard .dd-score { color: var(--gold); }
+  .day-dot.below { background: var(--red-light); border-color: var(--red); }
+  .day-dot.below .dd-score { color: var(--red); }
+
+  /* ROUTINES COMPARISON */
+  .routines-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 1.5rem 0; }
+  .routine-tier { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; }
+  .routine-tier-header { padding: 10px 1rem; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; }
+  .tier-min .routine-tier-header { background: var(--blue-light); color: var(--blue-dark); }
+  .tier-std .routine-tier-header { background: var(--gold-light); color: var(--gold); }
+  .tier-elite .routine-tier-header { background: var(--ink); color: var(--gold-mid); }
+  .routine-tier ul { list-style: none; padding: 10px 1rem 12px; }
+  .routine-tier li { font-size: 13px; color: var(--ink-mid); padding: 5px 0; border-bottom: 1px solid var(--rule); line-height: 1.45; }
+  .routine-tier li:last-child { border-bottom: none; }
+  .routine-tier li::before { content: '→ '; color: var(--gold); font-weight: 700; }
+  .tier-dur { text-align: center; font-family: var(--font-mono); font-size: 11px; color: var(--ink-faint); padding: 6px 1rem; border-top: 1px solid var(--rule); }
+
+  /* 90-DAY */
+  .review-timeline { margin: 1.5rem 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .review-phase { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 1rem 1.1rem; }
+  .review-phase .phase-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--gold); font-weight: 700; margin-bottom: 6px; }
+  .review-phase h4 { font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
+  .review-phase ul { list-style: none; padding: 0; }
+  .review-phase li { font-size: 12px; color: var(--ink-muted); padding: 3px 0; border-bottom: 1px dashed var(--rule); }
+  .review-phase li:last-child { border-bottom: none; }
+
+  /* WEEKLY QS */
+  .weekly-qs { counter-reset: q; margin: 1.5rem 0; }
+  .wq { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 1rem 1.25rem 1rem 3.5rem; margin-bottom: 10px; position: relative; }
+  .wq::before { counter-increment: q; content: 'Q' counter(q); position: absolute; left: 1rem; top: 1rem; font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--gold); letter-spacing: 0.06em; }
+  .wq p { font-size: 14px; color: var(--ink-mid); line-height: 1.5; }
+
+  @media (max-width: 600px) {
+    .identity-grid { grid-template-columns: 1fr; }
+    .routines-grid { grid-template-columns: 1fr; }
+    .review-timeline { grid-template-columns: 1fr; }
+    nav a { font-size: 11px; padding: 14px 10px; }
+    .week-history { grid-template-columns: repeat(7, 1fr); }
+  }
+  @media print { nav { display: none; } .page { padding: 1.5rem; } .section { page-break-inside: avoid; } }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">Morning OS</div>
+  <a href="#nonneg">Non-Negotiables</a>
+  <a href="#timeline">Timeline</a>
+  <a href="#tenx">10X Planning</a>
+  <a href="#protocol">Anti-Procrastination</a>
+  <a href="#identity">Identity</a>
+  <a href="#scorecard">Scorecard</a>
+  <a href="#tiers">Tiers</a>
+  <a href="#90day">90-Day Plan</a>
+</nav>
+
+<div class="page">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-eyebrow">90-Day Playbook — T-Town Edition</div>
+    <h1>Your Morning<br><em>Operating System</em></h1>
+    <p class="hero-sub">Built on Cardone's massive action, Willink's discipline, Clear's identity habits, and stewardship. This is not a routine — it is a system. Execute it before motivation arrives.</p>
+    <div class="hero-meta">
+      <div class="hero-stat"><span class="num">90</span><span class="lbl">Day commitment</span></div>
+      <div class="hero-stat"><span class="num">60</span><span class="lbl">Min. power window</span></div>
+      <div class="hero-stat"><span class="num">10</span><span class="lbl">Scorecard items</span></div>
+      <div class="hero-stat"><span class="num">0</span><span class="lbl">Negotiations allowed</span></div>
+    </div>
+  </div>
+
+  <!-- SECTION 1: NON-NEGOTIABLES -->
+  <div class="section" id="nonneg">
+    <div class="section-header">
+      <span class="section-num">01</span>
+      <h2>The Non-Negotiables</h2>
+    </div>
+    <div class="callout dark">
+      <div class="callout-label">Coaching note</div>
+      <p><strong>These are not goals. They are operating parameters.</strong> A pilot doesn't decide whether to run the pre-flight checklist based on how he feels. You don't decide whether to do these based on mood, stress, or how late you stayed up. The word "non-negotiable" means exactly that — it is not up for discussion. Especially with yourself.</p>
+    </div>
+    <div class="nonneg-grid">
+      <div class="nonneg-card">
+        <h4>📖 Bible + Prayer — before all inputs</h4>
+        <p>Scripture, then prayer — before email, phone, news, or social. Set the anchor in truth and gratitude before the world sets it for you. Focus on thankfulness, wisdom, leadership, and stewardship. Minimum: one chapter + three minutes of focused prayer. Non-compressible.</p>
+      </div>
+      <div class="nonneg-card">
+        <h4>🛏 Make the bed — immediately</h4>
+        <p>The moment your feet hit the floor. Not after coffee. Not after the bathroom. Your first act of discipline is to bring order to your space. This is your first win of the day. Take it.</p>
+      </div>
+      <div class="nonneg-card">
+        <h4>💧 Hydrate — 16 oz minimum</h4>
+        <p>Your brain is dehydrated after sleep. Stage it the night before — zero friction, zero decision. This is not optional wellness advice. It is basic maintenance on the most important machine you own.</p>
+      </div>
+      <div class="nonneg-card">
+        <h4>📰 Read — business books + news</h4>
+        <p>15 minutes: one chapter of a business book plus a scan of Axios, Reuters, or WSJ. Leaders who stop learning stop growing. Know your industry. Know the market. Know what's moving before your first call.</p>
+      </div>
+      <div class="nonneg-card">
+        <h4>👔 Get fully dressed and ready</h4>
+        <p>Not gym clothes. Not loungewear. Dressed and ready as if you have a meeting with someone you respect. Identity is enacted, not felt first. Your posture and confidence follow your appearance.</p>
+      </div>
+      <div class="nonneg-card">
+        <h4>📞 T-Town Pristine Clean — daily outreach</h4>
+        <p>10 calls and outreach emails every single day. Commercial cleaning is a volume game. Pipeline dries up when outreach stops. This is a non-negotiable revenue activity — not a to-do item. It happens before you get pulled into anything else.</p>
+      </div>
+      <div class="nonneg-card">
+        <h4>⏰ Work begins at a defined time</h4>
+        <p>Pick your start time and protect it. When that time arrives you are in the chair, on the call, or taking the action. The transition from morning routine to work is a hard line — not a gradual drift.</p>
+      </div>
+    </div>
+    <div class="callout red">
+      <div class="callout-label">Hard truth</div>
+      <p>Every time you break a non-negotiable, you teach your brain that your commitments are negotiable. That compounds. In six months you won't just have a bad morning habit — <strong>you'll have a character habit.</strong> The stakes are not productivity. The stakes are integrity with yourself.</p>
+    </div>
+  </div>
+
+  <!-- SECTION 2: TIMELINE -->
+  <div class="section" id="timeline">
+    <div class="section-header">
+      <span class="section-num">02</span>
+      <h2>The First 75 Minutes</h2>
+    </div>
+    <p style="color: var(--ink-muted); margin-bottom: 1.5rem; font-size: 14px;">Set your wake time and add 75 minutes to find your work-start. Every block below is fixed. Adjust the start time, not the sequence or the duration.</p>
+    <div class="timeline">
+
+      <div class="timeline-item">
+        <div class="tl-time">0:00</div>
+        <div class="tl-dot-col"><div class="tl-dot"></div><div class="tl-line"></div></div>
+        <div class="tl-content">
+          <div class="tl-title">Alarm. Feet on floor. No snooze.</div>
+          <div class="tl-desc">5-4-3-2-1-move. Counting backward interrupts the rationalization loop. Do not negotiate. Do not check your phone. Do not think. Move.</div>
+          <span class="tl-badge badge-red">zero tolerance</span>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="tl-time">0:01</div>
+        <div class="tl-dot-col"><div class="tl-dot"></div><div class="tl-line"></div></div>
+        <div class="tl-content">
+          <div class="tl-title">Make the bed</div>
+          <div class="tl-desc">2–3 minutes. First win. Order before action. This is not about the bed — it's about demonstrating to yourself that you do what you say you'll do.</div>
+          <span class="tl-badge badge-gold">non-negotiable</span>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="tl-time">0:04</div>
+        <div class="tl-dot-col"><div class="tl-dot"></div><div class="tl-line"></div></div>
+        <div class="tl-content">
+          <div class="tl-title">Hydrate — 16 oz water</div>
+          <div class="tl-desc">Staged the night before. No friction. Drink before coffee. Your brain is running on dehydration right now — enough to measurably impact judgment and decision quality.</div>
+          <span class="tl-badge badge-teal">body</span>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="tl-time">0:06</div>
+        <div class="tl-dot-col"><div class="tl-dot"></div><div class="tl-line"></div></div>
+        <div class="tl-content">
+          <div class="tl-title">Bible + Prayer — 15 minutes</div>
+          <div class="tl-desc">Phone stays face down or in another room. One chapter of Scripture, then three focused minutes of prayer: gratitude specifically named, wisdom asked for, stewardship committed to. Close by speaking your identity statement aloud. Truth anchors the day before anything else can.</div>
+          <span class="tl-badge badge-gold">non-negotiable — anchor</span>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="tl-time">0:21</div>
+        <div class="tl-dot-col"><div class="tl-dot"></div><div class="tl-line"></div></div>
+        <div class="tl-content">
+          <div class="tl-title">Business reading — 15 minutes</div>
+          <div class="tl-desc">One chapter of your current business book, then a 5-minute scan of Axios, Reuters, or WSJ. You are not consuming news — you are staying intelligence-current on markets, trends, and opportunities relevant to your businesses. Cap it at 15 minutes or it becomes avoidance.</div>
+          <span class="tl-badge badge-blue">knowledge + edge</span>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="tl-time">0:36</div>
+        <div class="tl-dot-col"><div class="tl-dot"></div><div class="tl-line"></div></div>
+        <div class="tl-content">
+          <div class="tl-title">Physical movement — 15 minutes</div>
+          <div class="tl-desc">Walk, lift, stretch, or sprint. BDNF floods your prefrontal cortex after movement — you literally think faster and execute better. This is not a luxury. It is cognitive fuel.</div>
+          <span class="tl-badge badge-teal">body + mind</span>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="tl-time">0:51</div>
+        <div class="tl-dot-col"><div class="tl-dot"></div><div class="tl-line"></div></div>
+        <div class="tl-content">
+          <div class="tl-title">Get dressed — fully ready for work</div>
+          <div class="tl-desc">Shower, groomed, dressed. Identity follows behavior. Getting ready signals to your nervous system that today is a performance day. 10–15 minutes.</div>
+          <span class="tl-badge badge-gold">non-negotiable</span>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="tl-time">1:05</div>
+        <div class="tl-dot-col"><div class="tl-dot"></div><div class="tl-line"></div></div>
+        <div class="tl-content">
+          <div class="tl-title">10X Planning + T-Town outreach list — 10 minutes</div>
+          <div class="tl-desc">Complete all five 10X lists (Section 3). Specifically write today's 10 T-Town Pristine Clean targets — names, numbers, and one-line email hook for each. Write by hand if possible. This is your battle plan. 10 minutes here controls your entire day.</div>
+          <span class="tl-badge badge-blue">Cardone protocol</span>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="tl-time">1:15</div>
+        <div class="tl-dot-col"><div class="tl-dot" style="background:var(--teal)"></div><div class="tl-line"></div></div>
+        <div class="tl-content">
+          <div class="tl-title">Work begins. First task. No warmup.</div>
+          <div class="tl-desc">Your first action is your most important task or your first T-Town call. Not email. Not organizing. Not "getting ready to work." The work.</div>
+          <span class="tl-badge badge-teal">execute</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SECTION 3: 10X PLANNING -->
+  <div class="section" id="tenx">
+    <div class="section-header">
+      <span class="section-num">03</span>
+      <h2>The 10X Activity Planning Session</h2>
+    </div>
+    <div class="callout">
+      <div class="callout-label">Cardone principle</div>
+      <p><strong>"Success is your duty, obligation, and responsibility."</strong> The 10X Rule is not about working more hours. It's about thinking at a different level of action. Most people set minimum targets and hit minimums. You're going to set massive targets and compress time.</p>
+    </div>
+    <table class="tenx-table">
+      <thead>
+        <tr><th>List item</th><th>What to write</th><th>Why it matters</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="num-badge">10</span>People to contact today</td>
+          <td>Names only. Sales prospects, partners, clients, referral sources, T-Town leads, people you've been avoiding.</td>
+          <td>Forces thinking in terms of relationships and pipeline, not tasks. Your network is your net worth.</td>
+        </tr>
+        <tr>
+          <td><span class="num-badge">10</span>T-Town outreach targets</td>
+          <td>10 specific commercial properties, property managers, or facility contacts. Name + number + one-line pitch. These get called before noon.</td>
+          <td>Commercial cleaning is a pipeline business. Outreach volume is the only variable you fully control. 10 a day = 200+ touches per month.</td>
+        </tr>
+        <tr>
+          <td><span class="num-badge">5</span>Calls you least want to make</td>
+          <td>The follow-up you owe. The uncomfortable ask. The confrontation you've delayed. The prospect who might say no.</td>
+          <td>Procrastination lives here. These 5 calls represent most of your stalled progress. Do the hard calls first.</td>
+        </tr>
+        <tr>
+          <td><span class="num-badge">3</span>Highest-leverage activities</td>
+          <td>What actually moves your business trajectory today? Not what's on your list — what changes the outcome?</td>
+          <td>The $10 tasks crowd out the $10,000 tasks. This forces you to distinguish between busy and productive.</td>
+        </tr>
+        <tr>
+          <td><span class="num-badge">1</span>Single win that defines today</td>
+          <td>If you could only accomplish one thing, what would make today a success? Write it at the top. Circle it.</td>
+          <td>Clarity is power. Define the win in advance and you stop confusing motion with progress.</td>
+        </tr>
+        <tr>
+          <td><span class="num-badge" style="background:var(--red)">1</span>The 10X move</td>
+          <td>The action most people in your position would avoid — too bold, too direct, too exposed. The one requiring real courage.</td>
+          <td>Massive action is uncomfortable by definition. If it doesn't make you slightly uncomfortable, it's not 10X.</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="callout red">
+      <div class="callout-label">Coaching challenge</div>
+      <p>Look at your T-Town list right now. <strong>Are those real targets with real numbers, or are they vague names you'll avoid calling?</strong> A name without a number is a wish. A number without a scheduled call time is procrastination. Write the name, write the number, make the call before noon. Every day.</p>
+    </div>
+  </div>
+
+  <!-- SECTION 4: ANTI-PROCRASTINATION -->
+  <div class="section" id="protocol">
+    <div class="section-header">
+      <span class="section-num">04</span>
+      <h2>Anti-Procrastination Protocol</h2>
+    </div>
+    <p style="color: var(--ink-muted); margin-bottom: 1.5rem; font-size: 14px;">These are hard rules, not suggestions. Each one addresses a specific flavor of procrastination.</p>
+    <div class="rule-list">
+      <div class="rule-item" data-num="1">
+        <h4>The "I'll do it later" rule</h4>
+        <p>When you catch yourself saying this, your obligation doubles. Do it immediately, or schedule it for a specific time in the next two hours and set an alarm. "Later" without a timestamp does not exist.</p>
+        <div class="reframe">Reframe → "Later is where good intentions go to die. I do it now or I schedule it with a hard commitment."</div>
+      </div>
+      <div class="rule-item" data-num="2">
+        <h4>The scrolling / avoidance rule</h4>
+        <p>Scrolling, organizing your desktop, checking email a third time, or any low-value activity while a high-value task sits undone — that is not a break. That is procrastination wearing a costume. Name it out loud. Return to the task.</p>
+        <div class="reframe">Reframe → "This is avoidance. I am not resting — I am hiding. Hiding is not a strategy."</div>
+      </div>
+      <div class="rule-item" data-num="3">
+        <h4>The over-planning rule</h4>
+        <p>Preparation that never ends is procrastination with a PhD. You don't need another framework or outline. You need to make the call. Research and planning have a return on investment only when they directly enable action. When they replace action, they're obstacles.</p>
+        <div class="reframe">Reframe → "Clarity comes from engagement, not preparation. I will know more after I start."</div>
+      </div>
+      <div class="rule-item" data-num="4">
+        <h4>The broken streak rule</h4>
+        <p>You miss a morning. It happens. The rule: <strong>never miss twice.</strong> One miss is an event. Two misses is a pattern. Three misses is an identity. Do not beat yourself up — diagnose. System gap or discipline gap? Fix it tonight. Execute tomorrow.</p>
+        <div class="reframe">Reframe → "Missing once is human. Missing twice is a choice. I choose differently tomorrow."</div>
+      </div>
+      <div class="rule-item" data-num="5">
+        <h4>The motivation fallacy rule</h4>
+        <p>Motivation follows action — it does not precede it. Waiting until you "feel like" working is waiting until you're thirsty to drill a well. You don't need to feel ready. You need to be moving.</p>
+        <div class="reframe">Reframe → "I don't need to feel like it. I need to do it. My feelings follow my actions — not the other way around."</div>
+      </div>
+      <div class="rule-item" data-num="6">
+        <h4>The T-Town first-call rule</h4>
+        <p>The first T-Town call happens before 9:30 AM. Not at noon when you "have a second." Not after the meeting. Before 9:30. Decision-makers are available, your energy is high, and the rest of the day's outreach follows naturally from a strong first call. Set the standard in the morning.</p>
+        <div class="reframe">Reframe → "The first call is the hardest. After that, momentum carries the rest."</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 5: IDENTITY -->
+  <div class="section" id="identity">
+    <div class="section-header">
+      <span class="section-num">05</span>
+      <h2>The Identity Shift</h2>
+    </div>
+    <div class="callout teal">
+      <div class="callout-label">James Clear — Atomic Habits</div>
+      <p><strong>Every action is a vote for the type of person you want to become.</strong> You don't rise to the level of your goals. You fall to the level of your systems. But before systems, there is identity. You can't consistently act against who you believe yourself to be. The work here is to change the belief.</p>
+    </div>
+    <div class="identity-grid">
+      <div class="identity-card">
+        <div class="old">I am someone who procrastinates</div>
+        <div class="new">I am a disciplined operator</div>
+        <div class="affirmation">"I take immediate action. I do not negotiate with myself. Discipline is who I am — not something I practice when convenient."</div>
+      </div>
+      <div class="identity-card">
+        <div class="old">I'll start when I feel motivated</div>
+        <div class="new">I execute before I feel ready</div>
+        <div class="affirmation">"I have been built and called for this. I don't wait for readiness — readiness comes through action. I move first."</div>
+      </div>
+      <div class="identity-card">
+        <div class="old">I struggle to keep commitments to myself</div>
+        <div class="new">I keep my word to myself above all others</div>
+        <div class="affirmation">"Self-trust is built by doing what I said I would do, especially when I don't want to. Every kept commitment is compound interest on integrity."</div>
+      </div>
+      <div class="identity-card">
+        <div class="old">I am managing businesses</div>
+        <div class="new">I am a high-output business builder and steward</div>
+        <div class="affirmation">"I am a steward of what God has entrusted to me — including T-Town Pristine Clean. I build with excellence and operate at a level worthy of the assignment."</div>
+      </div>
+      <div class="identity-card">
+        <div class="old">I work hard when I get started</div>
+        <div class="new">I am a man of faith who leads from the front</div>
+        <div class="affirmation">"My faith is not passive. It is expressed in how I lead my family, my teams, and myself. I show up because I am accountable to something eternal."</div>
+      </div>
+      <div class="identity-card">
+        <div class="old">I know what I should do but delay it</div>
+        <div class="new">I close the gap between knowing and doing</div>
+        <div class="affirmation">"The gap between who I am and who I'm meant to be is closed one morning at a time. Today's execution is tomorrow's character."</div>
+      </div>
+    </div>
+    <div class="callout dark">
+      <div class="callout-label">Daily practice</div>
+      <p><strong>Read your identity statement aloud during prayer.</strong> This is not a motivational exercise — it's a neurological one. Repeated verbal affirmation activates the prefrontal cortex and creates new default patterns. Spoken identity statements change behavior faster than written ones. Use your voice. Mean it.</p>
+    </div>
+  </div>
+
+  <!-- SECTION 6: SCORECARD -->
+  <div class="section" id="scorecard">
+    <div class="section-header">
+      <span class="section-num">06</span>
+      <h2>Daily Accountability Scorecard</h2>
+    </div>
+    <p style="color: var(--ink-muted); margin-bottom: 1rem; font-size: 14px;">Complete in under 3 minutes at the end of your morning block. Your score is saved automatically. Check your weekly history below.</p>
+
+    <div class="date-banner">
+      <span class="date-str" id="today-label">Loading...</span>
+      <span class="streak-info" id="streak-label">—</span>
+      <button class="reset-day-btn" onclick="resetToday()">Reset today</button>
+    </div>
+
+    <div class="scorecard">
+      <div class="scorecard-header">
+        <span>Today's scorecard</span>
+        <span class="pts">Score: <span id="sc-total">0</span> / 100</span>
+      </div>
+      <div class="scorecard-row" id="row-bible">
+        <div class="sc-check" onclick="toggleCheck('bible', 15)" tabindex="0" role="checkbox" aria-label="Bible and Prayer"></div>
+        <span class="sc-label">Bible reading + prayer completed before any digital inputs</span>
+        <span class="sc-pts">15 pts</span>
+      </div>
+      <div class="scorecard-row" id="row-reading">
+        <div class="sc-check" onclick="toggleCheck('reading', 10)" tabindex="0" role="checkbox" aria-label="Business reading"></div>
+        <span class="sc-label">Business book chapter + news scan (Axios / Reuters / WSJ)</span>
+        <span class="sc-pts">10 pts</span>
+      </div>
+      <div class="scorecard-row" id="row-wake">
+        <div class="sc-check" onclick="toggleCheck('wake', 10)" tabindex="0" role="checkbox" aria-label="Wake time"></div>
+        <span class="sc-label">Woke at target time — no snooze</span>
+        <span class="sc-pts">10 pts</span>
+      </div>
+      <div class="scorecard-row" id="row-routine">
+        <div class="sc-check" onclick="toggleCheck('routine', 10)" tabindex="0" role="checkbox" aria-label="Morning routine"></div>
+        <span class="sc-label">Full morning routine completed (bed made, hydrated, dressed)</span>
+        <span class="sc-pts">10 pts</span>
+      </div>
+      <div class="scorecard-row" id="row-workstart">
+        <div class="sc-check" onclick="toggleCheck('workstart', 10)" tabindex="0" role="checkbox" aria-label="Work start time"></div>
+        <span class="sc-label">Work started at or before defined start time</span>
+        <span class="sc-pts">10 pts</span>
+      </div>
+      <div class="scorecard-row" id="row-ttown">
+        <div class="sc-check" onclick="toggleCheck('ttown', 15)" tabindex="0" role="checkbox" aria-label="T-Town outreach"></div>
+        <span class="sc-label">T-Town Pristine Clean — 10 calls + outreach emails completed</span>
+        <span class="sc-pts">15 pts</span>
+      </div>
+      <div class="scorecard-row" id="row-tenx">
+        <div class="sc-check" onclick="toggleCheck('tenx', 10)" tabindex="0" role="checkbox" aria-label="10X outreach"></div>
+        <span class="sc-label">10X planning lists completed — all five sections written</span>
+        <span class="sc-pts">10 pts</span>
+      </div>
+      <div class="scorecard-row" id="row-mit">
+        <div class="sc-check" onclick="toggleCheck('mit', 10)" tabindex="0" role="checkbox" aria-label="MIT completed"></div>
+        <span class="sc-label">Most important task completed or substantially advanced</span>
+        <span class="sc-pts">10 pts</span>
+      </div>
+      <div class="scorecard-row" id="row-physical">
+        <div class="sc-check" onclick="toggleCheck('physical', 10)" tabindex="0" role="checkbox" aria-label="Physical activity"></div>
+        <span class="sc-label">Physical activity completed (15 min minimum)</span>
+        <span class="sc-pts">10 pts</span>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:1rem 0 1.5rem;">
+      <div style="background:var(--teal-light); border-radius:8px; padding:12px; text-align:center; border:1px solid var(--rule);">
+        <div style="font-family:var(--font-display); font-size:22px; font-weight:700; color:var(--teal);">90–100</div>
+        <div style="font-size:12px; color:var(--teal); margin-top:2px; text-transform:uppercase; letter-spacing:0.06em;">Elite day</div>
+      </div>
+      <div style="background:var(--gold-light); border-radius:8px; padding:12px; text-align:center; border:1px solid var(--rule);">
+        <div style="font-family:var(--font-display); font-size:22px; font-weight:700; color:var(--gold);">70–89</div>
+        <div style="font-size:12px; color:var(--gold); margin-top:2px; text-transform:uppercase; letter-spacing:0.06em;">Standard day</div>
+      </div>
+      <div style="background:var(--red-light); border-radius:8px; padding:12px; text-align:center; border:1px solid var(--rule);">
+        <div style="font-family:var(--font-display); font-size:22px; font-weight:700; color:var(--red);">&lt;70</div>
+        <div style="font-size:12px; color:var(--red); margin-top:2px; text-transform:uppercase; letter-spacing:0.06em;">Review required</div>
+      </div>
+    </div>
+
+    <h3 style="font-size:15px; font-weight:600; color:var(--ink); margin-bottom:0.75rem;">Last 7 days</h3>
+    <div class="week-history" id="week-history"></div>
+  </div>
+
+  <!-- SECTION 7: TIERS -->
+  <div class="section" id="tiers">
+    <div class="section-header">
+      <span class="section-num">07</span>
+      <h2>Routine Tiers — Consistency Without Perfection</h2>
+    </div>
+    <div class="callout dark">
+      <div class="callout-label">Willink principle</div>
+      <p><strong>Discipline equals freedom.</strong> Life will compress your morning. Travel will disrupt your routine. The answer is not to skip — it's to have a tier for every situation. You never miss. You just shift tiers.</p>
+    </div>
+    <div class="routines-grid">
+      <div class="routine-tier tier-min">
+        <div class="routine-tier-header">Minimum viable — &lt;15 min</div>
+        <ul>
+          <li>No snooze. Feet on floor.</li>
+          <li>Drink 16 oz water</li>
+          <li>Read one Bible verse + 60-second prayer</li>
+          <li>Get fully dressed</li>
+          <li>Write today's single most important task</li>
+          <li>Make 3 T-Town calls minimum</li>
+          <li>Begin work</li>
+        </ul>
+        <div class="tier-dur">Use when: travel, family emergency, chaos</div>
+      </div>
+      <div class="routine-tier tier-std">
+        <div class="routine-tier-header">Standard — 75 min</div>
+        <ul>
+          <li>No snooze. Bed made immediately.</li>
+          <li>Hydrate 16 oz</li>
+          <li>Bible + prayer (15 min)</li>
+          <li>Business reading + news (15 min)</li>
+          <li>Movement 15 min</li>
+          <li>Shower + fully dressed</li>
+          <li>10X planning + T-Town list</li>
+          <li>Work begins on time</li>
+        </ul>
+        <div class="tier-dur">Use on: most days, 5+ days per week</div>
+      </div>
+      <div class="routine-tier tier-elite">
+        <div class="routine-tier-header">Elite — 90+ min</div>
+        <ul>
+          <li>Wake earlier than needed</li>
+          <li>Hydrate + light stretch first</li>
+          <li>Deeper Bible study + journaling</li>
+          <li>Extended prayer — intercede for others</li>
+          <li>Full business chapter + in-depth news</li>
+          <li>Full workout — 30–40 min</li>
+          <li>Fully dressed + groomed</li>
+          <li>10X planning + T-Town list (full 10)</li>
+          <li>Begin with single most important task</li>
+        </ul>
+        <div class="tier-dur">Use when: low-travel weeks, peak seasons</div>
+      </div>
+    </div>
+    <div class="callout">
+      <div class="callout-label">The non-compression rule</div>
+      <p>The <strong>one item that never shrinks across any tier</strong> is Scripture and prayer. Everything else compresses under pressure. The spiritual foundation does not. Even on the minimum viable day, God comes before the laptop. T-Town outreach is the second non-compressible — at least 3 calls on minimum days.</p>
+    </div>
+  </div>
+
+  <!-- SECTION 8: 90-DAY PLAN -->
+  <div class="section" id="90day">
+    <div class="section-header">
+      <span class="section-num">08</span>
+      <h2>The 90-Day Execution Plan</h2>
+    </div>
+    <div class="review-timeline">
+      <div class="review-phase">
+        <div class="phase-label">Days 1–30 — Install</div>
+        <h4>Build the system</h4>
+        <ul>
+          <li>Set your hard wake time</li>
+          <li>Set work-start time — don't move it</li>
+          <li>Stage environment the night before</li>
+          <li>Start T-Town outreach list daily</li>
+          <li>Use minimum viable if needed — never skip</li>
+          <li>Weekly score target: 65+</li>
+          <li>Do not add complexity yet</li>
+        </ul>
+      </div>
+      <div class="review-phase">
+        <div class="phase-label">Days 31–60 — Strengthen</div>
+        <h4>Deepen the habits</h4>
+        <ul>
+          <li>Increase to standard routine most days</li>
+          <li>Weekly scoring review every Sunday</li>
+          <li>Identify your #1 procrastination pattern</li>
+          <li>Add one accountability partner</li>
+          <li>Track T-Town call conversion rate</li>
+          <li>Weekly score target: 75+</li>
+          <li>Expand 10X list targets</li>
+        </ul>
+      </div>
+      <div class="review-phase">
+        <div class="phase-label">Days 61–90 — Compound</div>
+        <h4>Raise the standard</h4>
+        <ul>
+          <li>Standard or elite routine daily</li>
+          <li>Scorecard should feel easy at 80+</li>
+          <li>Review business results: what changed?</li>
+          <li>Review T-Town pipeline growth</li>
+          <li>Set next 90-day revenue targets</li>
+          <li>Weekly score target: 85+</li>
+          <li>You are operating at a new level</li>
+        </ul>
+      </div>
+    </div>
+
+    <div style="margin-top:1.5rem;">
+      <h3 style="font-size:17px; font-weight:600; margin-bottom:1rem; color:var(--ink);">Weekly review — every Sunday (15 minutes)</h3>
+      <div class="weekly-qs">
+        <div class="wq"><p>What was my weekly scorecard average? What drove the variance?</p></div>
+        <div class="wq"><p>Which days did I miss — and what was the actual reason? Be honest.</p></div>
+        <div class="wq"><p>Did I make all 10 T-Town calls every day, or did I rationalize a shortcut?</p></div>
+        <div class="wq"><p>Did I complete the 5 hardest calls on my list, or did I avoid them again?</p></div>
+        <div class="wq"><p>What is the single outcome from this week that demonstrates 10X thinking?</p></div>
+        <div class="wq"><p>What am I rationalizing as "preparation" that is actually delay? Name it.</p></div>
+        <div class="wq"><p>Did my faith and prayer life lead my week — or follow it?</p></div>
+        <div class="wq"><p>What is the one thing I will do differently in the next 7 days?</p></div>
+      </div>
+    </div>
+
+    <div class="callout red">
+      <div class="callout-label">Final word — coaching challenge</div>
+      <p><strong>You have everything you need.</strong> You know what to do. You have the knowledge, the businesses, and the capability. What you are fighting is not a lack of information — it is the gap between knowing and doing. That gap is closed by one thing: <strong>execution at the moment of resistance.</strong></p>
+      <p>The person you want to become exists on the other side of the morning you're about to have. Don't negotiate your way out of it. Don't optimize your way around it. Just begin — before motivation, before clarity, before readiness.</p>
+      <p style="font-style:italic; color:var(--ink-mid);">"You will never be ready. You will only be willing."</p>
+    </div>
+  </div>
+
+</div><!-- /page -->
+
+<script>
+// ─── STORAGE KEYS ──────────────────────────────────────────────
+const STORAGE_KEY = 'mos_scores';
+const CHECKS_KEY  = 'mos_checks';
+
+const ITEMS = [
+  { id: 'bible',     pts: 15 },
+  { id: 'reading',   pts: 10 },
+  { id: 'wake',      pts: 10 },
+  { id: 'routine',   pts: 10 },
+  { id: 'workstart', pts: 10 },
+  { id: 'ttown',     pts: 15 },
+  { id: 'tenx',      pts: 10 },
+  { id: 'mit',       pts: 10 },
+  { id: 'physical',  pts: 10 },
+];
+
+// ─── DATE HELPERS ──────────────────────────────────────────────
+function todayKey() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function formatDate(dateStr) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const dt = new Date(y, m-1, d);
+  return days[dt.getDay()] + ' ' + months[m-1] + ' ' + d;
+}
+
+function last7Days() {
+  const result = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    const label = ['Su','Mo','Tu','We','Th','Fr','Sa'][d.getDay()];
+    result.push({ key, label });
+  }
+  return result;
+}
+
+// ─── LOAD / SAVE ───────────────────────────────────────────────
+function loadScores() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+  catch(e) { return {}; }
+}
+
+function saveScore(dateKey, score) {
+  const scores = loadScores();
+  scores[dateKey] = score;
+  // Keep only last 90 days
+  const keys = Object.keys(scores).sort();
+  if (keys.length > 90) keys.slice(0, keys.length - 90).forEach(k => delete scores[k]);
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(scores)); } catch(e) {}
+}
+
+function loadChecks() {
+  try {
+    const data = JSON.parse(localStorage.getItem(CHECKS_KEY)) || {};
+    return data[todayKey()] || {};
+  } catch(e) { return {}; }
+}
+
+function saveChecks(checks) {
+  try {
+    const data = JSON.parse(localStorage.getItem(CHECKS_KEY)) || {};
+    data[todayKey()] = checks;
+    // Keep only last 7 days of check state
+    const keys = Object.keys(data).sort();
+    if (keys.length > 7) keys.slice(0, keys.length - 7).forEach(k => delete data[k]);
+    localStorage.setItem(CHECKS_KEY, JSON.stringify(data));
+  } catch(e) {}
+}
+
+// ─── CALCULATE SCORE ──────────────────────────────────────────
+function calcScore(checks) {
+  return ITEMS.reduce((sum, item) => sum + (checks[item.id] ? item.pts : 0), 0);
+}
+
+// ─── RENDER SCORECARD ─────────────────────────────────────────
+function renderScorecard() {
+  const checks = loadChecks();
+  ITEMS.forEach(item => {
+    const row = document.getElementById('row-' + item.id);
+    const box = row.querySelector('.sc-check');
+    if (checks[item.id]) {
+      box.classList.add('checked');
+      row.classList.add('checked-row');
+    } else {
+      box.classList.remove('checked');
+      row.classList.remove('checked-row');
+    }
+  });
+  const score = calcScore(checks);
+  document.getElementById('sc-total').textContent = score;
+}
+
+// ─── TOGGLE CHECK ─────────────────────────────────────────────
+function toggleCheck(id, pts) {
+  const checks = loadChecks();
+  checks[id] = !checks[id];
+  saveChecks(checks);
+  const score = calcScore(checks);
+  saveScore(todayKey(), score);
+  renderScorecard();
+  renderWeekHistory();
+}
+
+// ─── RESET TODAY ──────────────────────────────────────────────
+function resetToday() {
+  if (!confirm('Clear today\'s scorecard?')) return;
+  saveChecks({});
+  saveScore(todayKey(), 0);
+  renderScorecard();
+  renderWeekHistory();
+}
+
+// ─── WEEK HISTORY ─────────────────────────────────────────────
+function renderWeekHistory() {
+  const scores = loadScores();
+  const days = last7Days();
+  const container = document.getElementById('week-history');
+  container.innerHTML = '';
+  days.forEach(({ key, label }) => {
+    const score = scores[key];
+    const isToday = key === todayKey();
+    let cls = '';
+    let display = '–';
+    if (score !== undefined) {
+      display = score;
+      if (score >= 90) cls = 'elite';
+      else if (score >= 70) cls = 'standard';
+      else cls = 'below';
+    }
+    const dot = document.createElement('div');
+    dot.className = 'day-dot' + (cls ? ' ' + cls : '');
+    dot.innerHTML = '<div class="dd-label">' + label + (isToday ? ' ★' : '') + '</div><div class="dd-score">' + display + '</div>';
+    container.appendChild(dot);
+  });
+}
+
+// ─── STREAK ───────────────────────────────────────────────────
+function calcStreak() {
+  const scores = loadScores();
+  let streak = 0;
+  const d = new Date();
+  // Start from yesterday if today has no score yet
+  if (!scores[todayKey()]) d.setDate(d.getDate() - 1);
+  for (let i = 0; i < 90; i++) {
+    const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    if (scores[key] >= 70) { streak++; d.setDate(d.getDate() - 1); }
+    else break;
+  }
+  return streak;
+}
+
+// ─── DATE BANNER ──────────────────────────────────────────────
+function renderDateBanner() {
+  const d = new Date();
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('today-label').textContent = days[d.getDay()] + ', ' + months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+  const streak = calcStreak();
+  document.getElementById('streak-label').textContent = streak > 0 ? '🔥 ' + streak + '-day streak (70+ score)' : 'No active streak yet';
+}
+
+// ─── NAV ACTIVE STATE ─────────────────────────────────────────
+const sections = document.querySelectorAll('.section');
+const navLinks = document.querySelectorAll('nav a');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => { if (window.scrollY >= s.offsetTop - 80) current = s.id; });
+  navLinks.forEach(a => { a.classList.toggle('active', a.getAttribute('href') === '#' + current); });
+});
+
+// ─── INIT ─────────────────────────────────────────────────────
+renderDateBanner();
+renderScorecard();
+renderWeekHistory();
+</script>
+
+</body>
+</html>
